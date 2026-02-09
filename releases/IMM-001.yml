@@ -1,6 +1,9 @@
 label: IMMUTABLE
 
-catalog: MS-003
+artist: Dennis Richie
+release: Opal EP
+
+catalog: IMM-001
 speed: "33⅓"
 genre: HARDGROOVE
 
@@ -17,3 +20,12 @@ coords:
 colors:
   bg: "#8C00FF"   # ultraviolet purple
   ink: "#00FFD1"  # electric cyan
+
+tracks:
+  A:
+    - "A1 — Signal Array"
+    - "A2 — Phase Memory"
+    - "A3 — Tangent Drift"
+  B:
+    - "B1 — Quantize the Sky"
+    - "B2 — Monad's Edge"

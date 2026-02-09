@@ -15,6 +15,8 @@ COORD_LAT=48°12'45"N
 COORD_LON=16°22'30"E
 COLOR_BG=#B7E718
 COLOR_INK=#0A3DBB
+ARTIST=Various Artists
+RELEASE_NAME=Template Release
   </metadata>
 
   <defs>
@@ -34,6 +36,7 @@ COLOR_INK=#0A3DBB
       .ink{fill:var(--neon-ink)}
       .inkS{stroke:var(--neon-ink)}
       .labelText{font-family:var(--font-label);font-weight:700;letter-spacing:var(--track);text-transform:uppercase;fill:var(--neon-ink)}
+      .artistText{font-family:var(--font-label);font-weight:900;letter-spacing:var(--track);text-transform:uppercase;fill:var(--neon-ink)}
       .micro{font-family:var(--font-text);font-weight:700;letter-spacing:var(--track);text-transform:uppercase;fill:var(--neon-ink)}
     ]]></style>
 
@@ -50,6 +53,17 @@ COLOR_INK=#0A3DBB
 
     <clipPath id="clipLabel">
       <circle cx="1024" cy="1024" r="900"/>
+    </clipPath>
+    <!-- Prevent right-side info from overlapping monolith; show only in right column -->
+    <clipPath id="clipRightInfo">
+      <rect x="1200" y="440" width="848" height="220"/>
+    </clipPath>
+    <!-- Tracklist safe columns (wrapping keeps inside; clip prevents any overlap) -->
+    <clipPath id="clipLeftTracks">
+      <rect x="120" y="740" width="583" height="700"/>
+    </clipPath>
+    <clipPath id="clipRightTracks">
+      <rect x="1143" y="740" width="905" height="700"/>
     </clipPath>
   </defs>
 
@@ -69,18 +83,23 @@ COLOR_INK=#0A3DBB
     <!-- TEXT targets -->
     <text id="t_label" class="labelText" x="1024" y="320" font-size="96" text-anchor="middle">IMMUTABLE</text>
 
-    <text id="t_coord_lat" class="micro" x="500" y="520" font-size="54">48°12'45"N</text>
-    <text id="t_coord_lon" class="micro" x="500" y="585" font-size="54">16°22'30"E</text>
+    <text id="t_coord_lat" class="micro" x="460" y="520" font-size="54">48°12'45"N</text>
+    <text id="t_coord_lon" class="micro" x="460" y="585" font-size="54">16°22'30"E</text>
 
-    <text id="t_serial" class="micro" x="1548" y="520" font-size="54" text-anchor="end">SERIAL: MS-4017</text>
-    <text id="t_idx" class="micro" x="1548" y="585" font-size="54" text-anchor="end">IDX: A5-T11</text>
+    <g id="rightInfo" clip-path="url(#clipRightInfo)">
+      <text id="t_artist" class="artistText" x="1588" y="520" font-size="54" text-anchor="end">Various Artists</text>
+      <text id="t_release" class="micro" x="1588" y="585" font-size="54" text-anchor="end">Template Release</text>
+    </g>
 
-    <text id="t_code" class="micro" x="420" y="1238" font-size="62">CODE: 93427-X</text>
-    <line class="inkS" x1="420" y1="1256" x2="670" y2="1256" stroke-width="6"/>
-    <text id="t_sector" class="micro" x="420" y="1316" font-size="62">SECTOR: 09B</text>
-    <line class="inkS" x1="420" y1="1334" x2="640" y2="1334" stroke-width="6"/>
+    <!-- Tracklists -->
+    <g id="tracksA" clip-path="url(#clipLeftTracks)">
+      <text id="t_tracks_a" class="micro" x="180" y="1024" font-size="42" text-anchor="start">SIDE A</text>
+    </g>
+    <g id="tracksB" clip-path="url(#clipRightTracks)">
+      <text id="t_tracks_b" class="micro" x="1203" y="1024" font-size="42" text-anchor="start">SIDE B</text>
+    </g>
 
-    <text id="t_bottom" class="labelText" x="1024" y="1735" font-size="78" text-anchor="middle">MS-002 • 33⅓ • HARDGROOVE</text>
+    <text id="t_bottom" class="micro" x="1024" y="1735" font-size="78" text-anchor="middle">MS-002 • 33⅓ • HARDGROOVE</text>
 
     <circle cx="1024" cy="1024" r="71" fill="var(--outer-black)"/>
   </g>

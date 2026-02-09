@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "releases/**.yml"
+      - ".github/releases/**.yml"
       - "templates/**.svg"
       - "scripts/**"
       - ".github/workflows/render.yml"
