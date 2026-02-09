@@ -1,68 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Vinyl Center Label — IMMUTABLE (Monolith System / Hardgroove)
-  Pure SVG template (duotone).
-  ViewBox: 2048 x 2048 (print-safe, scalable)
-
-  ============================
-  RELEASE VARIABLES (EDIT ME)
-  ============================
-
-  LABEL_NAME:     IMMUTABLE
-  CATALOG:        MS-002
-  SPEED:          33⅓
-  GENRE:          HARDGROOVE
-
-  SERIAL:         MS-4017
-  INDEX:          A5-T11
-  CODE:           93427-X
-  SECTOR:         09B
-
-  COORD_LAT:      48°12'45"N
-  COORD_LON:      16°22'30"E
-
-  COLOR_BG:       --neon-bg
-  COLOR_INK:      --neon-ink
--->
-
 <svg xmlns="http://www.w3.org/2000/svg" width="2048" height="2048" viewBox="0 0 2048 2048">
 
+  <metadata id="release_vars">
+RELEASE_VARIABLES
+LABEL=IMMUTABLE
+CATALOG=MS-002
+SPEED=33⅓
+GENRE=HARDGROOVE
+SERIAL=MS-4017
+IDX=A5-T11
+CODE=93427-X
+SECTOR=09B
+COORD_LAT=48°12'45"N
+COORD_LON=16°22'30"E
+COLOR_BG=#B7E718
+COLOR_INK=#0A3DBB
+  </metadata>
+
   <defs>
-    <!-- ====== COLOR + TYPE VARIABLES ====== -->
-    <style>
+    <style id="css_vars"><![CDATA[
       :root{
-        /* Duotone palette */
-        --outer-black: #000000;
-        --neon-bg:     #B7E718; /* acid lime */
-        --neon-ink:    #0A3DBB; /* electric blue */
-
-        /* Typography */
-        --font: "Roboto Condensed","Arial Narrow","DIN Condensed","Helvetica Neue Condensed",Arial,sans-serif;
-        --track: 0.06em;
+        --outer-black:#000000;
+        --neon-bg:#B7E718;
+        --neon-ink:#0A3DBB;
+        --font:"Roboto Condensed","Arial Narrow","DIN Condensed","Helvetica Neue Condensed",Arial,sans-serif;
+        --track:0.06em;
       }
 
-      .outer { fill: var(--outer-black); }
-      .bg    { fill: var(--neon-bg); }
-      .ink   { fill: var(--neon-ink); }
-      .inkS  { stroke: var(--neon-ink); }
+      .outer{fill:var(--outer-black)}
+      .bg{fill:var(--neon-bg)}
+      .ink{fill:var(--neon-ink)}
+      .inkS{stroke:var(--neon-ink)}
+      .labelText{font-family:var(--font);font-weight:700;letter-spacing:var(--track);text-transform:uppercase;fill:var(--neon-ink)}
+      .micro{font-family:var(--font);font-weight:700;letter-spacing:var(--track);text-transform:uppercase;fill:var(--neon-ink)}
+    ]]></style>
 
-      .labelText{
-        font-family: var(--font);
-        font-weight: 700;
-        letter-spacing: var(--track);
-        text-transform: uppercase;
-        fill: var(--neon-ink);
-      }
-      .micro{
-        font-family: var(--font);
-        font-weight: 700;
-        letter-spacing: var(--track);
-        text-transform: uppercase;
-        fill: var(--neon-ink);
-      }
-    </style>
-
-    <!-- ====== XERO / GRAIN FILTER ====== -->
     <filter id="xeroGrain" x="-20%" y="-20%" width="140%" height="140%">
       <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="8"/>
       <feColorMatrix type="matrix"
@@ -74,70 +46,40 @@
       <feBlend in="SourceGraphic" mode="multiply"/>
     </filter>
 
-    <!-- ====== CLIP TO LABEL CIRCLE ====== -->
     <clipPath id="clipLabel">
       <circle cx="1024" cy="1024" r="900"/>
     </clipPath>
   </defs>
 
-  <!-- ====== OUTER BLACK ====== -->
   <rect class="outer" x="0" y="0" width="2048" height="2048"/>
 
-  <!-- ====== LABEL CONTENT ====== -->
   <g clip-path="url(#clipLabel)">
     <rect class="bg" x="0" y="0" width="2048" height="2048" filter="url(#xeroGrain)"/>
 
-    <!-- Top & bottom rules -->
     <line class="inkS" x1="420" y1="360" x2="1628" y2="360" stroke-width="6"/>
     <line class="inkS" x1="420" y1="1628" x2="1628" y2="1628" stroke-width="6"/>
 
-    <!-- ====== MONOLITH (LOCKED GEOMETRY) ====== -->
-    <!-- Left face -->
-    <polygon class="ink"
-      points="916,474 752,517 752,1467 918,1476"/>
+    <!-- MONOLITH (locked geometry) -->
+    <polygon class="ink" points="916,474 752,517 752,1467 918,1476"/>
+    <polygon class="ink" points="927,474 1142,557 1176,574 1176,1382 1183,1386 1483,1379 1260,1422 928,1477"/>
+    <line x1="922" y1="474" x2="923" y2="1476" stroke="var(--neon-bg)" stroke-width="6"/>
 
-    <!-- Right face + base extension -->
-    <polygon class="ink"
-      points="927,474 1142,557 1176,574 1176,1382 1183,1386 1483,1379 1260,1422 928,1477"/>
+    <!-- TEXT targets -->
+    <text id="t_label" class="labelText" x="1024" y="320" font-size="96" text-anchor="middle">IMMUTABLE</text>
 
-    <!-- Center seam (background cut) -->
-    <line x1="922" y1="474" x2="923" y2="1476"
-          stroke="var(--neon-bg)" stroke-width="6"/>
+    <text id="t_coord_lat" class="micro" x="500" y="520" font-size="54">48°12'45"N</text>
+    <text id="t_coord_lon" class="micro" x="500" y="585" font-size="54">16°22'30"E</text>
 
-    <!-- ====== TOP LABEL ====== -->
-    <text class="labelText"
-          x="1024"
-          y="320"
-          font-size="96"
-          text-anchor="middle">
-      IMMUTABLE
-    </text>
+    <text id="t_serial" class="micro" x="1548" y="520" font-size="54" text-anchor="end">SERIAL: MS-4017</text>
+    <text id="t_idx" class="micro" x="1548" y="585" font-size="54" text-anchor="end">IDX: A5-T11</text>
 
-    <!-- ====== MICROTYPE BLOCKS ====== -->
-    <!-- Coordinates -->
-    <text class="micro" x="500" y="520" font-size="54">48°12'45"N</text>
-    <text class="micro" x="500" y="585" font-size="54">16°22'30"E</text>
-
-    <!-- Serial / index -->
-    <text class="micro" x="1548" y="520" font-size="54" text-anchor="end">SERIAL: MS-4017</text>
-    <text class="micro" x="1548" y="585" font-size="54" text-anchor="end">IDX: A5-T11</text>
-
-    <!-- Code / sector -->
-    <text class="micro" x="420" y="1238" font-size="62">CODE: 93427-X</text>
+    <text id="t_code" class="micro" x="420" y="1238" font-size="62">CODE: 93427-X</text>
     <line class="inkS" x1="420" y1="1256" x2="670" y2="1256" stroke-width="6"/>
-    <text class="micro" x="420" y="1316" font-size="62">SECTOR: 09B</text>
+    <text id="t_sector" class="micro" x="420" y="1316" font-size="62">SECTOR: 09B</text>
     <line class="inkS" x1="420" y1="1334" x2="640" y2="1334" stroke-width="6"/>
 
-    <!-- ====== BOTTOM STRIP ====== -->
-    <text class="labelText"
-          x="1024"
-          y="1735"
-          font-size="78"
-          text-anchor="middle">
-      MS-002 • 33⅓ • HARDGROOVE
-    </text>
+    <text id="t_bottom" class="labelText" x="1024" y="1735" font-size="78" text-anchor="middle">MS-002 • 33⅓ • HARDGROOVE</text>
 
-    <!-- ====== SPINDLE HOLE ====== -->
     <circle cx="1024" cy="1024" r="71" fill="var(--outer-black)"/>
   </g>
 </svg>
