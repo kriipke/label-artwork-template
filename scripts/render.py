@@ -3,22 +3,57 @@ import sys
 import glob
 import yaml
 import subprocess
+import re
 from lxml import etree
 
-NS = {"svg": "http://www.w3.org/2000/svg"}
+SVG_NS = "http://www.w3.org/2000/svg"
+NS = {"svg": SVG_NS}
 
-def set_text(root, element_id, value):
+def parse_metadata_defaults(root) -> dict:
+    """
+    Reads <metadata id="release_vars">KEY=VALUE</metadata> into defaults.
+    Ignores blank lines and lines without '='.
+    """
+    nodes = root.xpath("//svg:metadata[@id='release_vars']", namespaces=NS)
+    if not nodes:
+        return {}
+    text = nodes[0].text or ""
+    defaults = {}
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("RELEASE_VARIABLES"):
+            continue
+        if "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        defaults[k.strip()] = v.strip()
+    return defaults
+
+def set_text(root, element_id: str, value: str):
     el = root.xpath(f"//svg:*[@id='{element_id}']", namespaces=NS)
     if not el:
         raise RuntimeError(f"Missing element id='{element_id}' in template")
     el[0].text = value
 
-def set_css_vars(svg_text, bg, ink):
-    # Replace the first occurrences of --neon-bg and --neon-ink defaults.
-    # Assumes template contains lines like: --neon-bg:#B7E718; and --neon-ink:#0A3DBB;
-    svg_text = svg_text.replace("--neon-bg:#B7E718;", f"--neon-bg:{bg};", 1)
-    svg_text = svg_text.replace("--neon-ink:#0A3DBB;", f"--neon-ink:{ink};", 1)
-    return svg_text
+def set_css_var_in_style(root, var_name: str, value: str):
+    """
+    Updates :root{ --var_name:...; } inside <style id="css_vars">.
+    """
+    style_nodes = root.xpath("//svg:style[@id='css_vars']", namespaces=NS)
+    if not style_nodes:
+        raise RuntimeError("Missing <style id='css_vars'> in template")
+    style_el = style_nodes[0]
+    css = style_el.text or ""
+
+    # Replace existing var definition; if missing, inject into :root block.
+    pattern = rf"(--{re.escape(var_name)}\s*:\s*)([^;]+)(;)"
+    if re.search(pattern, css):
+        css = re.sub(pattern, rf"\g<1>{value}\g<3>", css, count=1)
+    else:
+        # Insert into first :root{ ... } block
+        css = re.sub(r"(:root\s*\{)", rf"\1\n        --{var_name}:{value};", css, count=1)
+
+    style_el.text = css
 
 def inkscape_export(svg_path, out_png, out_pdf, px=3000):
     subprocess.check_call([
@@ -35,44 +70,55 @@ def inkscape_export(svg_path, out_png, out_pdf, px=3000):
 
 def render_one(template_path, yml_path, out_root="rendered"):
     with open(yml_path, "r", encoding="utf-8") as f:
-        data = yaml.safe_load(f)
+        data = yaml.safe_load(f) or {}
 
-    catalog = data["catalog"]
-    out_dir = os.path.join(out_root, catalog)
-    os.makedirs(out_dir, exist_ok=True)
-
-    # Load SVG template
     parser = etree.XMLParser(remove_blank_text=False)
     tree = etree.parse(template_path, parser)
     root = tree.getroot()
 
+    defaults = parse_metadata_defaults(root)
+
+    def get(key, fallback=""):
+        # YAML keys are lower-case in your schema; metadata uses UPPERCASE
+        # We'll check YAML first, then metadata, then fallback.
+        if key in data and data[key] is not None:
+            return str(data[key])
+        return str(defaults.get(key.upper(), fallback))
+
+    # Required-ish: catalog
+    catalog = get("catalog", defaults.get("CATALOG", "UNKNOWN"))
+    out_dir = os.path.join(out_root, catalog)
+    os.makedirs(out_dir, exist_ok=True)
+
     # Text substitutions
-    set_text(root, "t_label", data.get("label", "IMMUTABLE"))
-    coords = data.get("coords", {})
-    set_text(root, "t_coord_lat", coords.get("lat", ""))
-    set_text(root, "t_coord_lon", coords.get("lon", ""))
+    set_text(root, "t_label", get("label", "IMMUTABLE"))
 
-    set_text(root, "t_serial", f"SERIAL: {data.get('serial','')}")
-    set_text(root, "t_idx", f"IDX: {data.get('idx','')}")
-    set_text(root, "t_code", f"CODE: {data.get('code','')}")
-    set_text(root, "t_sector", f"SECTOR: {data.get('sector','')}")
+    coords = data.get("coords") or {}
+    lat = coords.get("lat") or defaults.get("COORD_LAT", "")
+    lon = coords.get("lon") or defaults.get("COORD_LON", "")
+    set_text(root, "t_coord_lat", str(lat))
+    set_text(root, "t_coord_lon", str(lon))
 
-    bottom = f"{catalog} • {data.get('speed','33⅓')} • {data.get('genre','HARDGROOVE')}"
+    set_text(root, "t_serial", f"SERIAL: {get('serial', defaults.get('SERIAL',''))}")
+    set_text(root, "t_idx",    f"IDX: {get('idx', defaults.get('IDX',''))}")
+    set_text(root, "t_code",   f"CODE: {get('code', defaults.get('CODE',''))}")
+    set_text(root, "t_sector", f"SECTOR: {get('sector', defaults.get('SECTOR',''))}")
+
+    bottom = f"{catalog} • {get('speed', defaults.get('SPEED','33⅓'))} • {get('genre', defaults.get('GENRE','HARDGROOVE'))}"
     set_text(root, "t_bottom", bottom)
 
-    # Serialize, then set CSS vars (easiest without fragile CSS parsing)
-    svg_bytes = etree.tostring(tree, pretty_print=True, xml_declaration=True, encoding="UTF-8")
-    svg_text = svg_bytes.decode("utf-8")
+    # Colors (YAML overrides metadata)
+    colors = data.get("colors") or {}
+    bg = colors.get("bg") or defaults.get("COLOR_BG") or "#B7E718"
+    ink = colors.get("ink") or defaults.get("COLOR_INK") or "#0A3DBB"
 
-    colors = data.get("colors", {})
-    bg = colors.get("bg", "#B7E718")
-    ink = colors.get("ink", "#0A3DBB")
-    svg_text = set_css_vars(svg_text, bg, ink)
+    # Update CSS vars safely
+    set_css_var_in_style(root, "neon-bg", bg)
+    set_css_var_in_style(root, "neon-ink", ink)
 
     # Write SVG
     svg_out = os.path.join(out_dir, "label.svg")
-    with open(svg_out, "w", encoding="utf-8") as f:
-        f.write(svg_text)
+    tree.write(svg_out, xml_declaration=True, encoding="UTF-8", pretty_print=True)
 
     # Render PNG + PDF
     png_out = os.path.join(out_dir, "label.png")
