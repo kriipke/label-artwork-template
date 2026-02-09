@@ -1,0 +1,45 @@
+name: Render label artwork
+
+on:
+  push:
+    paths:
+      - "releases/**.yml"
+      - "templates/**.svg"
+      - "scripts/**"
+      - ".github/workflows/render.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Inkscape
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y inkscape
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r scripts/requirements.txt
+
+      - name: Render all releases
+        run: |
+          python scripts/render.py templates/label.template.svg "releases/*.yml"
+
+      - name: Commit rendered outputs
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(render): update rendered label artwork"
+          file_pattern: rendered/**/*
