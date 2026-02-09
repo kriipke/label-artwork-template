@@ -5,9 +5,14 @@ import yaml
 import subprocess
 import re
 from lxml import etree
+import base64
+import shutil
 
 SVG_NS = "http://www.w3.org/2000/svg"
 NS = {"svg": SVG_NS}
+
+FONT_LOGO = "DMSans-Variable"
+FONT_TEXT = "DMSans-Variable"
 
 def parse_metadata_defaults(root) -> dict:
     """
@@ -55,18 +60,65 @@ def set_css_var_in_style(root, var_name: str, value: str):
 
     style_el.text = css
 
+def append_css_to_style(root, css_snippet: str):
+    style_nodes = root.xpath("//svg:style[@id='css_vars']", namespaces=NS)
+    if not style_nodes:
+        raise RuntimeError("Missing <style id='css_vars'> in template")
+    style_el = style_nodes[0]
+    existing = style_el.text or ""
+    style_el.text = existing.rstrip() + "\n\n" + css_snippet.strip() + "\n"
+
+def _mime_from_ext(path: str) -> str:
+    lower = path.lower()
+    if lower.endswith(".woff2"):
+        return "font/woff2"
+    if lower.endswith(".woff"):
+        return "font/woff"
+    if lower.endswith(".otf"):
+        return "font/otf"
+    return "font/ttf"
+
+def embed_font_face(root, family: str, font_path: str, weight: str = "700", style: str = "normal"):
+    with open(font_path, "rb") as f:
+        b64 = base64.b64encode(f.read()).decode("ascii")
+    mime = _mime_from_ext(font_path)
+    css = f"""
+@font-face {{
+  font-family: '{family}';
+  src: url(data:{mime};base64,{b64});
+  font-weight: {weight};
+  font-style: {style};
+  font-display: swap;
+}}
+"""
+    append_css_to_style(root, css)
+
+def _get_inkscape_bin() -> str | None:
+    return os.environ.get("INKSCAPE_BIN") or shutil.which("inkscape")
+
 def inkscape_export(svg_path, out_png, out_pdf, px=3000):
-    subprocess.check_call([
-        "inkscape",
-        svg_path,
-        f"--export-filename={out_png}",
-        f"--export-width={px}",
-    ])
-    subprocess.check_call([
-        "inkscape",
-        svg_path,
-        f"--export-filename={out_pdf}",
-    ])
+    if str(os.environ.get("SKIP_EXPORT", "")).lower() in {"1", "true", "yes"}:
+        print("SKIP_EXPORT set; skipping PNG/PDF export")
+        return
+    bin_path = _get_inkscape_bin()
+    if not bin_path:
+        print("Inkscape not found; skipping PNG/PDF export. Set INKSCAPE_BIN or install Inkscape.")
+        return
+    try:
+        subprocess.check_call([
+            bin_path,
+            svg_path,
+            f"--export-filename={out_png}",
+            f"--export-width={px}",
+        ])
+        subprocess.check_call([
+            bin_path,
+            svg_path,
+            f"--export-filename={out_pdf}",
+        ])
+    except FileNotFoundError:
+        print("Inkscape binary missing at runtime; skipping PNG/PDF export.")
+        return
 
 def render_one(template_path, yml_path, out_root="rendered"):
     with open(yml_path, "r", encoding="utf-8") as f:
@@ -115,6 +167,27 @@ def render_one(template_path, yml_path, out_root="rendered"):
     # Update CSS vars safely
     set_css_var_in_style(root, "neon-bg", bg)
     set_css_var_in_style(root, "neon-ink", ink)
+
+    # Optional custom fonts from repository: fonts/label.(ttf|otf|woff|woff2) and fonts/text.(ttf|otf|woff|woff2)
+    def find_font(prefix: str):
+        base = os.path.join("fonts", prefix)
+        for ext in (".woff2", ".woff", ".otf", ".ttf"):
+            p = base + ext
+            if os.path.isfile(p):
+                return p
+        return None
+
+    label_font = find_font(FONT_LOGO)
+    text_font = find_font(FONT_TEXT)
+
+    # Embed fonts and set CSS variables to prefer them
+    fallback_stack = '"Roboto Condensed","Arial Narrow","DIN Condensed","Helvetica Neue Condensed",Arial,sans-serif'
+    if label_font:
+        embed_font_face(root, "RepoLabel", label_font, weight="700")
+        set_css_var_in_style(root, "font-label", f"'RepoLabel', {fallback_stack}")
+    if text_font:
+        embed_font_face(root, "RepoText", text_font, weight="700")
+        set_css_var_in_style(root, "font-text", f"'RepoText', {fallback_stack}")
 
     # Write SVG
     svg_out = os.path.join(out_dir, "label.svg")

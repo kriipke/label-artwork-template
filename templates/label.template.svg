@@ -23,7 +23,9 @@ COLOR_INK=#0A3DBB
         --outer-black:#000000;
         --neon-bg:#B7E718;
         --neon-ink:#0A3DBB;
-        --font:"Roboto Condensed","Arial Narrow","DIN Condensed","Helvetica Neue Condensed",Arial,sans-serif;
+        /* Default font stacks; render.py may inject @font-face and override --font-label/--font-text */
+        --font-label:"Roboto Condensed","Arial Narrow","DIN Condensed","Helvetica Neue Condensed",Arial,sans-serif;
+        --font-text:"Roboto Condensed","Arial Narrow","DIN Condensed","Helvetica Neue Condensed",Arial,sans-serif;
         --track:0.06em;
       }
 
@@ -31,8 +33,8 @@ COLOR_INK=#0A3DBB
       .bg{fill:var(--neon-bg)}
       .ink{fill:var(--neon-ink)}
       .inkS{stroke:var(--neon-ink)}
-      .labelText{font-family:var(--font);font-weight:700;letter-spacing:var(--track);text-transform:uppercase;fill:var(--neon-ink)}
-      .micro{font-family:var(--font);font-weight:700;letter-spacing:var(--track);text-transform:uppercase;fill:var(--neon-ink)}
+      .labelText{font-family:var(--font-label);font-weight:700;letter-spacing:var(--track);text-transform:uppercase;fill:var(--neon-ink)}
+      .micro{font-family:var(--font-text);font-weight:700;letter-spacing:var(--track);text-transform:uppercase;fill:var(--neon-ink)}
     ]]></style>
 
     <filter id="xeroGrain" x="-20%" y="-20%" width="140%" height="140%">
