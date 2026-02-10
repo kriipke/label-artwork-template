@@ -1,0 +1,31 @@
+label: IMMUTABLE
+
+artist: Dennis Richie
+release: Feel It EP
+
+catalog: IMM-002
+speed: "33⅓"
+genre: HARDGROOVE
+
+serial: MS-4018
+idx: B9-Z33
+
+code: 4832-X
+sector: 82P
+
+coords:
+  lat: 48°12'45"N
+  lon: 16°22'30"E
+
+colors:
+  bg: "#00FFCC"   # ultraviolet purple
+  ink: "#222222"  # electric cyan
+
+tracks:
+  A:
+    - "A1 — Feel It"
+    - "A2 — Geode"
+
+  B:
+    - "B1 — Quantize the Sky"
+    - "B2 — Monad's Edge
